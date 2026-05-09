@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}My Cart - ShopKart{% endblock %}
+{% block content %}
+<div class="sk-page-header"><div class="container"><h1><i class="bi bi-cart3 me-2"></i>My Cart</h1></div></div>
+<div class="container my-4">
+  {% if cart.items.all %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      {% for item in cart.items.all %}
+      <div class="sk-cart-item">
+        <div class="sk-cart-img">
+          {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+          {% else %}<div class="sk-img-placeholder"><i class="bi bi-image"></i></div>{% endif %}
+        </div>
+        <div class="sk-cart-info flex-grow-1">
+          <h6>{{ item.product.name }}</h6>
+          <p class="text-muted small">{{ item.product.category.name }}</p>
+          <div class="sk-product-price">
+            <span class="sk-price-current">₹{{ item.product.get_discounted_price }}</span>
+            {% if item.product.discount_percent %}<span class="sk-price-old">₹{{ item.product.price }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="sk-cart-qty">
+          <form method="POST" action="{% url 'cart:update' item.id %}">
+            {% csrf_token %}
+            <button type="submit" name="action" value="decrease" class="sk-qty-btn">-</button>
+            <span class="sk-qty-num">{{ item.quantity }}</span>
+            <button type="submit" name="action" value="increase" class="sk-qty-btn">+</button>
+          </form>
+          <div class="sk-cart-subtotal">₹{{ item.get_subtotal }}</div>
+          <a href="{% url 'cart:remove' item.id %}" class="sk-remove-btn" onclick="return confirm('Remove item?')">
+            <i class="bi bi-trash"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <!-- ORDER SUMMARY -->
+    <div class="col-lg-4">
+      <div class="sk-summary-card">
+        <h5 class="mb-4">Order Summary</h5>
+        <div class="sk-summary-row"><span>Subtotal</span><span>₹{{ cart.get_subtotal }}</span></div>
+        {% if cart.coupon %}
+        <div class="sk-summary-row text-success"><span>Discount ({{ cart.coupon.discount_percent }}%)</span><span>-₹{{ cart.get_discount }}</span></div>
+        {% endif %}
+        <div class="sk-summary-row"><span>Shipping</span><span class="text-success">FREE</span></div>
+        <hr>
+        <div class="sk-summary-total"><span>Total</span><span>₹{{ cart.get_total }}</span></div>
+
+        <!-- COUPON -->
+        <div class="mt-3">
+          {% if cart.coupon %}
+          <div class="sk-coupon-applied">
+            <i class="bi bi-check-circle text-success me-1"></i>
+            <strong>{{ cart.coupon.code }}</strong> applied!
+            <a href="{% url 'cart:remove_coupon' %}" class="ms-2 text-danger small">Remove</a>
+          </div>
+          {% else %}
+          <form method="POST" action="{% url 'cart:apply_coupon' %}">
+            {% csrf_token %}
+            <div class="input-group">
+              <input type="text" class="form-control" name="coupon_code" placeholder="Coupon code">
+              <button type="submit" class="btn sk-btn-coupon">Apply</button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+
+        <a href="{% url 'orders:checkout' %}" class="sk-btn-primary w-100 btn-lg mt-4">
+          <i class="bi bi-lock me-2"></i>Proceed to Checkout
+        </a>
+        <a href="{% url 'products:list' %}" class="btn btn-light w-100 mt-2">
+          <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+        </a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="sk-empty-state">
+    <i class="bi bi-cart-x"></i>
+    <h4>Your cart is empty!</h4>
+    <p>Add some products to your cart and they'll appear here.</p>
+    <a href="{% url 'products:list' %}" class="sk-btn-primary">Start Shopping</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

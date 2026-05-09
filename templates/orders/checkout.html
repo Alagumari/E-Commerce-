@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Checkout - ShopKart{% endblock %}
+{% block content %}
+<div class="sk-page-header"><div class="container"><h1>Checkout</h1></div></div>
+<div class="container my-4">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="sk-card">
+        <h5 class="mb-4"><i class="bi bi-geo-alt me-2"></i>Shipping Address</h5>
+        <form method="POST" id="checkoutForm">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12"><label class="form-label">Full Name *</label>
+              <input type="text" class="form-control" name="full_name" required value="{{ user.get_full_name }}"></div>
+            <div class="col-md-6"><label class="form-label">Email *</label>
+              <input type="email" class="form-control" name="email" required value="{{ user.email }}"></div>
+            <div class="col-md-6"><label class="form-label">Phone *</label>
+              <input type="tel" class="form-control" name="phone" required value="{% if profile %}{{ profile.phone }}{% endif %}"></div>
+            <div class="col-12"><label class="form-label">Address *</label>
+              <textarea class="form-control" name="address" rows="2" required>{% if profile %}{{ profile.address }}{% endif %}</textarea></div>
+            <div class="col-md-4"><label class="form-label">City *</label>
+              <input type="text" class="form-control" name="city" required value="{% if profile %}{{ profile.city }}{% endif %}"></div>
+            <div class="col-md-4"><label class="form-label">State *</label>
+              <input type="text" class="form-control" name="state" required value="{% if profile %}{{ profile.state }}{% endif %}"></div>
+            <div class="col-md-4"><label class="form-label">Pincode *</label>
+              <input type="text" class="form-control" name="pincode" required value="{% if profile %}{{ profile.pincode }}{% endif %}"></div>
+          </div>
+          <button type="submit" class="sk-btn-primary btn-lg w-100 mt-4">
+            <i class="bi bi-lock me-2"></i>Place Order & Pay ₹{{ cart.get_total }}
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="sk-summary-card">
+        <h5 class="mb-4">Order Items</h5>
+        {% for item in cart.items.all %}
+        <div class="sk-checkout-item">
+          <span>{{ item.product.name }} × {{ item.quantity }}</span>
+          <strong>₹{{ item.get_subtotal }}</strong>
+        </div>
+        {% endfor %}
+        <hr>
+        {% if cart.coupon %}
+        <div class="sk-summary-row text-success"><span>Discount ({{ cart.coupon.code }})</span><span>-₹{{ cart.get_discount }}</span></div>
+        {% endif %}
+        <div class="sk-summary-total"><span>Total</span><span>₹{{ cart.get_total }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

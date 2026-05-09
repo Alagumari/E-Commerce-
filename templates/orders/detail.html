@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Order #{{ order.id }} - ShopKart{% endblock %}
+{% block content %}
+<div class="sk-page-header"><div class="container"><h1>Order #{{ order.id }}</h1></div></div>
+<div class="container my-4">
+  <div class="row g-4">
+    <div class="col-md-8">
+      <div class="sk-card">
+        <h5 class="mb-3">Order Items</h5>
+        {% for item in order.items.all %}
+        <div class="sk-order-item-row">
+          <span>{{ item.product_name }}</span>
+          <span>× {{ item.quantity }}</span>
+          <span>₹{{ item.price }}</span>
+          <strong>₹{{ item.get_subtotal }}</strong>
+        </div>
+        {% endfor %}
+        <hr>
+        {% if order.discount_amount %}<div class="sk-summary-row text-success"><span>Discount ({{ order.coupon_code }})</span><span>-₹{{ order.discount_amount }}</span></div>{% endif %}
+        <div class="sk-summary-total"><span>Total Paid</span><span>₹{{ order.total_amount }}</span></div>
+      </div>
+      <div class="sk-card mt-3">
+        <h5 class="mb-3">Shipping Address</h5>
+        <p><strong>{{ order.full_name }}</strong><br>{{ order.address }}<br>{{ order.city }}, {{ order.state }} - {{ order.pincode }}<br>📞 {{ order.phone }}</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="sk-card">
+        <h5 class="mb-3">Order Status</h5>
+        <div class="mb-2"><span class="sk-status-badge sk-status-{{ order.status }}">{{ order.get_status_display }}</span></div>
+        <div class="mb-3"><span class="sk-pay-status sk-pay-{{ order.payment_status }}">Payment: {{ order.get_payment_status_display }}</span></div>
+        <p class="text-muted small">Placed: {{ order.created_at|date:"M d, Y H:i" }}</p>
+        {% if order.status in 'pending confirmed' %}
+        <a href="{% url 'orders:cancel' order.id %}" class="btn btn-outline-danger w-100" onclick="return confirm('Cancel this order?')">Cancel Order</a>
+        {% endif %}
+        <a href="{% url 'orders:list' %}" class="sk-btn-outline w-100 mt-2">Back to Orders</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

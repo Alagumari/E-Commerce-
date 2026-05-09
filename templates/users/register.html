@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Register - ShopKart{% endblock %}
+{% block content %}
+<div class="sk-auth-page">
+  <div class="sk-auth-card sk-auth-card-wide">
+    <div class="sk-auth-header">
+      <div class="sk-auth-logo"><i class="bi bi-person-plus-fill"></i></div>
+      <h2>Create Account</h2>
+      <p>Join thousands of happy shoppers!</p>
+    </div>
+    <form method="POST" class="sk-auth-form" id="registerForm">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.first_name.label }}</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}<div class="text-danger small">{{ form.first_name.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.last_name.label }}</label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}<div class="text-danger small">{{ form.last_name.errors }}</div>{% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">{{ form.username.label }}</label>
+          {{ form.username }}
+          {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors }}</div>{% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">{{ form.email.label }}</label>
+          {{ form.email }}
+          {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.password1.label }}</label>
+          {{ form.password1 }}
+          {% if form.password1.errors %}<div class="text-danger small">{{ form.password1.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.password2.label }}</label>
+          {{ form.password2 }}
+          {% if form.password2.errors %}<div class="text-danger small">{{ form.password2.errors }}</div>{% endif %}
+        </div>
+      </div>
+      <button type="submit" class="sk-btn-primary w-100 btn-lg mt-4">
+        <i class="bi bi-person-check me-2"></i>Create Account
+      </button>
+    </form>
+    <div class="sk-auth-footer">
+      <p>Already have an account? <a href="{% url 'users:login' %}">Login here</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

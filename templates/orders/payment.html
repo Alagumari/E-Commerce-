@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Payment — ShopKart{% endblock %}
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="sk-card text-center">
+
+        <!-- Header -->
+        <div class="sk-payment-icon mb-3">
+          <i class="bi bi-shield-lock-fill" style="color: var(--sk-primary);"></i>
+        </div>
+        <h3 class="mb-1">Complete Your Payment</h3>
+        <p class="text-muted mb-4">
+          Order <strong>#{{ order.id }}</strong> &nbsp;·&nbsp;
+          <strong>₹{{ total_display }}</strong>
+        </p>
+
+        {% if is_demo %}
+        <!-- ======= DEMO MODE ======= -->
+        <div class="sk-demo-box mb-4">
+          <div class="sk-demo-badge">🧪 DEMO MODE</div>
+          <p class="small text-muted mt-2 mb-3">
+            Razorpay keys not configured yet.<br>
+            Add your keys in <code>shopkart/settings.py</code> to enable real payments.
+          </p>
+          <div class="sk-key-hint mb-3">
+            <code>RAZORPAY_KEY_ID = 'rzp_test_XXXXXX'</code><br>
+            <code>RAZORPAY_KEY_SECRET = 'your_secret'</code>
+          </div>
+          <!-- Demo success form -->
+          <form method="GET" action="{% url 'orders:payment_success' %}">
+            <input type="hidden" name="order_id" value="{{ order.id }}">
+            <button type="submit" class="sk-btn-primary w-100 btn-lg">
+              <i class="bi bi-check-circle me-2"></i>Simulate Payment Success
+            </button>
+          </form>
+          <p class="text-muted small mt-2">
+            This simulates a real ₹{{ total_display }} payment for testing.
+          </p>
+        </div>
+
+        {% else %}
+        <!-- ======= REAL RAZORPAY ======= -->
+        <div class="sk-razorpay-box mb-4">
+          <img src="https://razorpay.com/favicon.ico" width="20" class="me-2" alt="">
+          <span class="text-muted small">Powered by Razorpay · 100% Secure</span>
+        </div>
+
+        <!-- Hidden form that submits after Razorpay success -->
+        <form id="rzpSuccessForm" method="POST" action="{% url 'orders:payment_success' %}">
+          {% csrf_token %}
+          <input type="hidden" name="order_id" value="{{ order.id }}">
+          <input type="hidden" name="razorpay_order_id" id="rzp_order_id" value="{{ razorpay_order_id }}">
+          <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
+          <input type="hidden" name="razorpay_signature" id="rzp_signature">
+        </form>
+
+        <button class="sk-btn-primary w-100 btn-lg" id="rzp-btn">
+          <i class="bi bi-credit-card me-2"></i>Pay ₹{{ total_display }} via Razorpay
+        </button>
+
+        <p class="text-muted small mt-3">
+          <i class="bi bi-info-circle me-1"></i>
+          Test card: <code>4111 1111 1111 1111</code> | Expiry: any future date | CVV: any 3 digits
+        </p>
+        {% endif %}
+
+        <a href="{% url 'cart:cart' %}" class="btn btn-light w-100 mt-2">
+          <i class="bi bi-arrow-left me-2"></i>Back to Cart
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if not is_demo %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+  key: "{{ razorpay_key }}",
+  amount: "{{ amount }}",
+  currency: "INR",
+  name: "ShopKart",
+  description: "Order #{{ order.id }}",
+  image: "",
+  order_id: "{{ razorpay_order_id }}",
+  handler: function(response) {
+    // Payment success — fill hidden form and submit
+    document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+    document.getElementById('rzp_signature').value = response.razorpay_signature;
+    document.getElementById('rzp_order_id').value = response.razorpay_order_id;
+    document.getElementById('rzpSuccessForm').submit();
+  },
+  prefill: {
+    name: "{{ order.full_name }}",
+    email: "{{ order.email }}",
+    contact: "{{ order.phone }}"
+  },
+  notes: {
+    order_id: "{{ order.id }}"
+  },
+  theme: {
+    color: "#6c63ff"
+  },
+  modal: {
+    ondismiss: function() {
+      console.log("Payment modal closed");
+    }
+  }
+};
+
+document.getElementById('rzp-btn').addEventListener('click', function(e) {
+  e.preventDefault();
+  var rzp = new Razorpay(options);
+  rzp.on('payment.failed', function(resp) {
+    alert('Payment failed: ' + resp.error.description);
+    window.location.href = "{% url 'orders:payment_failed' %}?order_id={{ order.id }}";
+  });
+  rzp.open();
+});
+</script>
+{% endif %}
+{% endblock %}

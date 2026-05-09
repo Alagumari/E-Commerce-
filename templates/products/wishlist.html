@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}My Wishlist - ShopKart{% endblock %}
+{% block content %}
+<div class="sk-page-header"><div class="container"><h1><i class="bi bi-heart-fill me-2 text-danger"></i>My Wishlist</h1></div></div>
+<div class="container my-4">
+  {% if wishlist %}
+  <div class="row g-4">
+    {% for w in wishlist %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="sk-product-card">
+        {% if w.product.discount_percent %}<div class="sk-badge-discount">-{{ w.product.discount_percent }}%</div>{% endif %}
+        <div class="sk-product-img">
+          {% if w.product.image %}<img src="{{ w.product.image.url }}" alt="{{ w.product.name }}">
+          {% else %}<div class="sk-img-placeholder"><i class="bi bi-image"></i></div>{% endif %}
+        </div>
+        <div class="sk-product-body">
+          <h6 class="sk-product-name">{{ w.product.name }}</h6>
+          <div class="sk-product-price"><span class="sk-price-current">₹{{ w.product.get_discounted_price }}</span></div>
+          <div class="d-flex gap-2 mt-2">
+            <a href="{% url 'cart:add' w.product.id %}" class="sk-btn-card flex-fill">Add to Cart</a>
+            <a href="{% url 'products:toggle_wishlist' w.product.id %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-heart-fill"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="sk-empty-state">
+    <i class="bi bi-heart"></i>
+    <h4>Your wishlist is empty!</h4>
+    <p>Save items you love and shop them later.</p>
+    <a href="{% url 'products:list' %}" class="sk-btn-primary">Browse Products</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

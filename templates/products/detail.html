@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} - ShopKart{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'products:home' %}">Home</a></li><li class="breadcrumb-item"><a href="{% url 'products:list' %}">Shop</a></li><li class="breadcrumb-item active">{{ product.name }}</li></ol>
+  </nav>
+  <div class="row g-4">
+    <!-- PRODUCT IMAGE -->
+    <div class="col-md-5">
+      <div class="sk-detail-img-wrap">
+        {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" class="sk-detail-img">
+        {% else %}<div class="sk-detail-img-placeholder"><i class="bi bi-image"></i></div>{% endif %}
+        {% if product.discount_percent %}<div class="sk-badge-discount sk-badge-lg">-{{ product.discount_percent }}% OFF</div>{% endif %}
+      </div>
+    </div>
+    <!-- PRODUCT INFO -->
+    <div class="col-md-7">
+      <p class="sk-product-category mb-1">{{ product.category.name }}</p>
+      <h2 class="sk-detail-title">{{ product.name }}</h2>
+      <!-- Rating -->
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="sk-stars">
+          {% for i in range_5 %}
+          <i class="bi bi-star{% if i <= avg_rating %}-fill{% endif %} {% if i <= avg_rating %}text-warning{% endif %}"></i>
+          {% endfor %}
+        </div>
+        <span class="text-muted">({{ reviews.count }} reviews)</span>
+      </div>
+      <!-- Price -->
+      <div class="sk-detail-price mb-3">
+        <span class="sk-price-big">₹{{ product.get_discounted_price }}</span>
+        {% if product.discount_percent %}
+        <span class="sk-price-old-big">₹{{ product.price }}</span>
+        <span class="sk-save-badge">Save ₹{{ product.price|add:"-0" }}</span>
+        {% endif %}
+      </div>
+      <!-- Stock -->
+      {% if product.stock > 0 %}
+      <div class="sk-stock-badge in-stock mb-3"><i class="bi bi-check-circle me-1"></i>In Stock ({{ product.stock }} available)</div>
+      {% else %}
+      <div class="sk-stock-badge out-stock mb-3"><i class="bi bi-x-circle me-1"></i>Out of Stock</div>
+      {% endif %}
+      <!-- Description -->
+      <p class="sk-detail-desc mb-4">{{ product.description }}</p>
+      <!-- Action Buttons -->
+      {% if user.is_authenticated %}
+        {% if product.stock > 0 %}
+        <div class="d-flex gap-3 flex-wrap mb-3">
+          <a href="{% url 'cart:add' product.id %}" class="sk-btn-primary btn-lg flex-fill">
+            <i class="bi bi-cart-plus me-2"></i>Add to Cart
+          </a>
+          <a href="{% url 'products:toggle_wishlist' product.id %}" class="sk-btn-outline btn-lg px-4">
+            <i class="bi bi-heart{% if in_wishlist %}-fill text-danger{% endif %}"></i>
+          </a>
+        </div>
+        {% else %}
+        <button class="sk-btn-primary btn-lg" disabled>Out of Stock</button>
+        {% endif %}
+      {% else %}
+      <a href="{% url 'users:login' %}?next={{ request.path }}" class="sk-btn-primary btn-lg"><i class="bi bi-lock me-2"></i>Login to Buy</a>
+      {% endif %}
+      <!-- Extra Info -->
+      <div class="sk-extra-info mt-4">
+        <div class="sk-extra-item"><i class="bi bi-truck"></i><span>Free delivery on orders above ₹999</span></div>
+        <div class="sk-extra-item"><i class="bi bi-arrow-repeat"></i><span>30-day easy returns</span></div>
+        <div class="sk-extra-item"><i class="bi bi-shield-check"></i><span>Authentic product guaranteed</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="row mt-5">
+    <div class="col-lg-8">
+      <h4 class="sk-section-title mb-4">Customer Reviews</h4>
+      {% if user.is_authenticated %}
+      <div class="sk-review-form mb-4">
+        <h6>Write a Review</h6>
+        <form method="POST">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Rating</label>
+            <div class="sk-star-select">
+              {% for i in range_5 %}
+              <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if user_review and user_review.rating == i %}checked{% endif %}>
+              <label for="star{{ i }}"><i class="bi bi-star-fill"></i></label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-3">
+            <textarea class="form-control" name="comment" rows="3" placeholder="Share your experience..." required>{% if user_review %}{{ user_review.comment }}{% endif %}</textarea>
+          </div>
+          <button type="submit" class="sk-btn-primary">Submit Review</button>
+        </form>
+      </div>
+      {% endif %}
+      {% for review in reviews %}
+      <div class="sk-review-card">
+        <div class="d-flex justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <div class="sk-reviewer-avatar">{{ review.user.username|first|upper }}</div>
+            <div>
+              <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+              <div class="sk-stars small">
+                {% for i in range_5 %}<i class="bi bi-star{% if i <= review.rating %}-fill text-warning{% endif %}"></i>{% endfor %}
+              </div>
+            </div>
+          </div>
+          <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+        </div>
+        <p class="mt-2 mb-0">{{ review.comment }}</p>
+      </div>
+      {% empty %}
+      <p class="text-muted">No reviews yet. Be the first to review!</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- RELATED PRODUCTS -->
+  {% if related %}
+  <div class="mt-5">
+    <h4 class="sk-section-title mb-4">Related Products</h4>
+    <div class="row g-4">
+      {% for p in related %}
+      <div class="col-6 col-md-3">
+        <div class="sk-product-card">
+          <div class="sk-product-img">
+            {% if p.image %}<img src="{{ p.image.url }}" alt="{{ p.name }}">
+            {% else %}<div class="sk-img-placeholder"><i class="bi bi-image"></i></div>{% endif %}
+          </div>
+          <div class="sk-product-body">
+            <h6 class="sk-product-name">{{ p.name }}</h6>
+            <div class="sk-product-price"><span class="sk-price-current">₹{{ p.get_discounted_price }}</span></div>
+            <a href="{% url 'products:detail' p.slug %}" class="sk-btn-card mt-2">View</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

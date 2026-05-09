@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}My Orders - ShopKart{% endblock %}
+{% block content %}
+<div class="sk-page-header"><div class="container"><h1>My Orders</h1></div></div>
+<div class="container my-4">
+  {% if orders %}
+  <div class="sk-card">
+    {% for order in orders %}
+    <div class="sk-order-card">
+      <div class="row align-items-center g-3">
+        <div class="col-md-2">
+          <div class="sk-order-num">#{{ order.id }}</div>
+          <small class="text-muted">{{ order.created_at|date:"M d, Y" }}</small>
+        </div>
+        <div class="col-md-3">
+          <span class="sk-status-badge sk-status-{{ order.status }}">{{ order.get_status_display }}</span>
+          <br><span class="sk-pay-status sk-pay-{{ order.payment_status }}">{{ order.get_payment_status_display }}</span>
+        </div>
+        <div class="col-md-4">
+          <small class="text-muted">{{ order.items.count }} item(s)</small>
+          {% for item in order.items.all|slice:":2" %}
+          <div class="small">{{ item.product_name }}</div>
+          {% endfor %}
+        </div>
+        <div class="col-md-2">
+          <strong class="sk-order-amount">₹{{ order.total_amount }}</strong>
+        </div>
+        <div class="col-md-1">
+          <a href="{% url 'orders:detail' order.id %}" class="sk-btn-sm">View</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="sk-empty-state">
+    <i class="bi bi-bag-x"></i>
+    <h4>No orders yet!</h4>
+    <p>Start shopping and your orders will appear here.</p>
+    <a href="{% url 'products:list' %}" class="sk-btn-primary">Shop Now</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

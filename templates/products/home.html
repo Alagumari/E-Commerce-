@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}ShopKart - Home{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section class="sk-hero">
+  <div class="container">
+    <div class="row align-items-center min-vh-75">
+      <div class="col-lg-6">
+        <div class="sk-hero-badge">🔥 New Season Sale — Up to 70% Off</div>
+        <h1 class="sk-hero-title">Discover <span class="sk-highlight">Premium</span> Products</h1>
+        <p class="sk-hero-subtitle">Shop the latest trends with unbeatable prices. Quality guaranteed, happiness delivered!</p>
+        <div class="d-flex gap-3 flex-wrap mt-4">
+          <a href="{% url 'products:list' %}" class="sk-btn-primary btn-lg">
+            <i class="bi bi-grid me-2"></i>Shop Now
+          </a>
+          <a href="#categories" class="sk-btn-outline btn-lg">
+            <i class="bi bi-tags me-2"></i>Browse Categories
+          </a>
+        </div>
+        <div class="sk-stats-row mt-5">
+          <div class="sk-stat"><span class="sk-stat-num">10K+</span><span class="sk-stat-label">Products</span></div>
+          <div class="sk-stat"><span class="sk-stat-num">50K+</span><span class="sk-stat-label">Customers</span></div>
+          <div class="sk-stat"><span class="sk-stat-num">100%</span><span class="sk-stat-label">Secure</span></div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES BAR -->
+<section class="sk-features-bar">
+  <div class="container">
+    <div class="row g-3">
+      <div class="col-6 col-md-3"><div class="sk-feature-item"><i class="bi bi-truck"></i><div><strong>Free Shipping</strong><small>On orders ₹999+</small></div></div></div>
+      <div class="col-6 col-md-3"><div class="sk-feature-item"><i class="bi bi-arrow-repeat"></i><div><strong>Easy Returns</strong><small>30-day policy</small></div></div></div>
+      <div class="col-6 col-md-3"><div class="sk-feature-item"><i class="bi bi-shield-check"></i><div><strong>Secure Pay</strong><small>100% protected</small></div></div></div>
+      <div class="col-6 col-md-3"><div class="sk-feature-item"><i class="bi bi-headset"></i><div><strong>24/7 Support</strong><small>Always here</small></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN CATEGORIES -->
+{% if categories %}
+<section id="categories" class="sk-section">
+  <div class="container">
+    <div class="sk-section-header">
+      <h2>Shop by <span class="sk-highlight">Category</span></h2>
+      <p>Find exactly what you're looking for</p>
+    </div>
+    <div class="row g-3">
+      {% for cat in categories %}
+      <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'products:list' %}?category={{ cat.slug }}" class="sk-cat-card">
+          <div class="sk-cat-icon">
+            {% if cat.image %}
+              <img src="{{ cat.image.url }}" alt="{{ cat.name }}">
+            {% else %}
+              <i class="bi bi-grid"></i>
+            {% endif %}
+          </div>
+          <span>{{ cat.name }}</span>
+          {% if cat.subcategories.exists %}
+          <small class="text-muted" style="font-size:0.7rem;">{{ cat.subcategories.count }} sub-categories</small>
+          {% endif %}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- FASHION SUBCATEGORIES SPOTLIGHT -->
+
+
+<!-- FEATURED PRODUCTS -->
+{% if featured %}
+<section class="sk-section">
+  <div class="container">
+    <div class="sk-section-header">
+      <h2>Featured <span class="sk-highlight">Products</span></h2>
+      <p>Handpicked just for you</p>
+    </div>
+    <div class="row g-4">
+      {% for p in featured %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="sk-product-card">
+          {% if p.discount_percent %}<div class="sk-badge-discount">-{{ p.discount_percent }}%</div>{% endif %}
+          <div class="sk-product-img">
+            {% if p.image %}<img src="{{ p.image.url }}" alt="{{ p.name }}">
+            {% else %}<div class="sk-img-placeholder"><i class="bi bi-image"></i></div>{% endif %}
+            <div class="sk-product-overlay">
+              <a href="{% url 'products:detail' p.slug %}" class="sk-overlay-btn"><i class="bi bi-eye"></i></a>
+              {% if user.is_authenticated %}
+              <a href="{% url 'cart:add' p.id %}" class="sk-overlay-btn"><i class="bi bi-cart-plus"></i></a>
+              <a href="{% url 'products:toggle_wishlist' p.id %}" class="sk-overlay-btn"><i class="bi bi-heart"></i></a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="sk-product-body">
+            <p class="sk-product-category">
+              {{ p.category.name }}
+              {% if p.category.parent %}<span class="text-muted">· {{ p.category.parent.name }}</span>{% endif %}
+            </p>
+            <h6 class="sk-product-name">{{ p.name }}</h6>
+            <div class="sk-product-price">
+              <span class="sk-price-current">₹{{ p.get_discounted_price }}</span>
+              {% if p.discount_percent %}<span class="sk-price-old">₹{{ p.price }}</span>{% endif %}
+            </div>
+            <a href="{% url 'products:detail' p.slug %}" class="sk-btn-card mt-2">View Details</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-4">
+      <a href="{% url 'products:list' %}" class="sk-btn-outline">View All Products <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- DEALS -->
+{% if best_sellers %}
+<section class="sk-section sk-section-alt">
+  <div class="container">
+    <div class="sk-section-header">
+      <h2>🔥 Hot <span class="sk-highlight">Deals</span></h2>
+      <p>Limited time offers — grab them fast!</p>
+    </div>
+    <div class="row g-4">
+      {% for p in best_sellers %}
+      <div class="col-md-6 col-lg-3">
+        <div class="sk-deal-card">
+          <div class="sk-deal-badge">{{ p.discount_percent }}% OFF</div>
+          <div class="sk-deal-img">
+            {% if p.image %}<img src="{{ p.image.url }}" alt="{{ p.name }}">
+            {% else %}<div class="sk-img-placeholder"><i class="bi bi-image"></i></div>{% endif %}
+          </div>
+          <div class="sk-deal-body">
+            <h6>{{ p.name }}</h6>
+            <div class="sk-product-price">
+              <span class="sk-price-current">₹{{ p.get_discounted_price }}</span>
+              <span class="sk-price-old">₹{{ p.price }}</span>
+            </div>
+            <a href="{% url 'products:detail' p.slug %}" class="sk-btn-deal">Shop Now</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- PROMO BANNER -->
+<section class="sk-promo-banner">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h3>🎉 Sign up & Get 20% Off Your First Order!</h3>
+        <p>Use coupon <strong>WELCOME200</strong> at checkout.</p>
+      </div>
+      <div class="col-md-4 text-md-end">
+        {% if not user.is_authenticated %}
+        <a href="{% url 'users:register' %}" class="sk-btn-white">Register Now</a>
+        {% else %}
+        <a href="{% url 'products:list' %}" class="sk-btn-white">Shop Now</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

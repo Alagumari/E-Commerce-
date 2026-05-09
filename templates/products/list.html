@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% block title %}
+  {% if selected_category %}{{ selected_category.name }}{% elif query %}Search: {{ query }}{% else %}All Products{% endif %} - ShopKart
+{% endblock %}
+{% block content %}
+
+<div class="sk-page-header">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <h1>
+          {% if selected_category %}
+            {% if selected_category.parent %}
+              <span class="text-muted fs-5">{{ selected_category.parent.name }} /</span>
+            {% endif %}
+            {{ selected_category.name }}
+          {% elif query %}
+            Search: "{{ query }}"
+          {% else %}
+            All Products
+          {% endif %}
+        </h1>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Home</a></li>
+            {% if selected_category %}
+              {% if selected_category.parent %}
+                <li class="breadcrumb-item">
+                  <a href="{% url 'products:list' %}?category={{ selected_category.parent.slug }}">{{ selected_category.parent.name }}</a>
+                </li>
+              {% endif %}
+              <li class="breadcrumb-item active">{{ selected_category.name }}</li>
+            {% else %}
+              <li class="breadcrumb-item active">Shop</li>
+            {% endif %}
+          </ol>
+        </nav>
+      </div>
+      {% if selected_category and selected_category.subcategories.exists %}
+      <div class="sk-subcat-pills">
+        {% for sub in selected_category.subcategories.all %}
+        <a href="{% url 'products:list' %}?category={{ sub.slug }}"
+           class="sk-subcat-pill {% if cat_slug == sub.slug %}active{% endif %}">
+          {{ sub.name }}
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container my-4">
+  <div class="row g-4">
+
+    <!-- SIDEBAR -->
+    <div class="col-lg-3">
+      <div class="sk-filter-card">
+        <h5 class="sk-filter-title"><i class="bi bi-funnel me-2"></i>Filters</h5>
+        <form method="GET" action="{% url 'products:list' %}">
+          {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+          <!-- Categories with subcategories -->
+          <div class="sk-filter-group">
+            <label class="sk-filter-label">Categories</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="category" id="catAll" value=""
+                {% if not cat_slug %}checked{% endif %}>
+              <label class="form-check-label fw-semibold" for="catAll">All Categories</label>
+            </div>
+            {% for cat in top_categories %}
+            <div class="mt-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="category"
+                  id="cat{{ cat.id }}" value="{{ cat.slug }}"
+                  {% if cat_slug == cat.slug %}checked{% endif %}>
+                <label class="form-check-label fw-semibold" for="cat{{ cat.id }}">
+                  {{ cat.name }}
+                </label>
+              </div>
+              {% if cat.subcategories.exists %}
+              <div class="ms-3 mt-1">
+                {% for sub in cat.subcategories.all %}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="category"
+                    id="cat{{ sub.id }}" value="{{ sub.slug }}"
+                    {% if cat_slug == sub.slug %}checked{% endif %}>
+                  <label class="form-check-label text-muted" for="cat{{ sub.id }}">
+                    └ {{ sub.name }}
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Price Range -->
+          <div class="sk-filter-group">
+            <label class="sk-filter-label">Price Range</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="number" class="form-control form-control-sm" name="min_price"
+                  placeholder="Min ₹" value="{{ request.GET.min_price }}">
+              </div>
+              <div class="col-6">
+                <input type="number" class="form-control form-control-sm" name="max_price"
+                  placeholder="Max ₹" value="{{ request.GET.max_price }}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Sort -->
+          <div class="sk-filter-group">
+            <label class="sk-filter-label">Sort By</label>
+            <select class="form-select form-select-sm" name="sort">
+              <option value="newest"     {% if sort == 'newest'     %}selected{% endif %}>Newest First</option>
+              <option value="price_low"  {% if sort == 'price_low'  %}selected{% endif %}>Price: Low → High</option>
+              <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High → Low</option>
+              <option value="name"       {% if sort == 'name'       %}selected{% endif %}>Name A–Z</option>
+            </select>
+          </div>
+
+          <button type="submit" class="sk-btn-primary w-100">Apply Filters</button>
+          <a href="{% url 'products:list' %}" class="btn btn-light w-100 mt-2">Clear All</a>
+        </form>
+      </div>
+
+      <!-- Fashion quick links box -->
+      <div class="sk-filter-card mt-3">
+        <h6 class="sk-filter-label mb-3"><i class="bi bi-bag me-1"></i>Fashion</h6>
+        <a href="{% url 'products:list' %}?category=mens"
+           class="sk-quick-link {% if cat_slug == 'mens' %}active{% endif %}">
+          <i class="bi bi-person me-2"></i>Mens
+        </a>
+        <a href="{% url 'products:list' %}?category=womens"
+           class="sk-quick-link {% if cat_slug == 'womens' %}active{% endif %}">
+          <i class="bi bi-person-heart me-2"></i>Womens
+        </a>
+        <a href="{% url 'products:list' %}?category=kids"
+           class="sk-quick-link {% if cat_slug == 'kids' %}active{% endif %}">
+          <i class="bi bi-emoji-smile me-2"></i>Kids
+        </a>
+      </div>
+    </div>
+
+    <!-- PRODUCTS GRID -->
+    <div class="col-lg-9">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="sk-results-info mb-0">
+          <strong>{{ products.paginator.count }}</strong> product{{ products.paginator.count|pluralize }} found
+          {% if query %} for "<em>{{ query }}</em>"{% endif %}
+        </p>
+      </div>
+
+      {% if products %}
+      <div class="row g-4">
+        {% for p in products %}
+        <div class="col-6 col-md-4">
+          <div class="sk-product-card">
+            {% if p.discount_percent %}<div class="sk-badge-discount">-{{ p.discount_percent }}%</div>{% endif %}
+            <div class="sk-product-img">
+              {% if p.image %}
+                <img src="{{ p.image.url }}" alt="{{ p.name }}">
+              {% else %}
+                <div class="sk-img-placeholder"><i class="bi bi-image"></i></div>
+              {% endif %}
+              <div class="sk-product-overlay">
+                <a href="{% url 'products:detail' p.slug %}" class="sk-overlay-btn" title="Quick View">
+                  <i class="bi bi-eye"></i>
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'cart:add' p.id %}" class="sk-overlay-btn" title="Add to Cart">
+                  <i class="bi bi-cart-plus"></i>
+                </a>
+                <a href="{% url 'products:toggle_wishlist' p.id %}" class="sk-overlay-btn" title="Wishlist">
+                  <i class="bi bi-heart"></i>
+                </a>
+                {% endif %}
+              </div>
+            </div>
+            <div class="sk-product-body">
+              <p class="sk-product-category">
+                {{ p.category.name }}
+                {% if p.category.parent %}
+                  <span class="text-muted">· {{ p.category.parent.name }}</span>
+                {% endif %}
+              </p>
+              <h6 class="sk-product-name">{{ p.name }}</h6>
+              <div class="sk-product-price">
+                <span class="sk-price-current">₹{{ p.get_discounted_price }}</span>
+                {% if p.discount_percent %}
+                  <span class="sk-price-old">₹{{ p.price }}</span>
+                {% endif %}
+              </div>
+              <a href="{% url 'products:detail' p.slug %}" class="sk-btn-card mt-2">View Details</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- PAGINATION -->
+      {% if products.has_other_pages %}
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center sk-pagination">
+          {% if products.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.previous_page_number }}&q={{ query }}&category={{ cat_slug }}&sort={{ sort }}">&laquo;</a>
+          </li>
+          {% endif %}
+          {% for num in products.paginator.page_range %}
+          <li class="page-item {% if products.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}&q={{ query }}&category={{ cat_slug }}&sort={{ sort }}">{{ num }}</a>
+          </li>
+          {% endfor %}
+          {% if products.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.next_page_number }}&q={{ query }}&category={{ cat_slug }}&sort={{ sort }}">&raquo;</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="sk-empty-state">
+        <i class="bi bi-search"></i>
+        <h4>No products found</h4>
+        <p>Try a different category or clear the filters.</p>
+        <a href="{% url 'products:list' %}" class="sk-btn-primary">Clear Filters</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
