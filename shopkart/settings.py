@@ -73,5 +73,5 @@ LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'products:home'
 LOGOUT_REDIRECT_URL = 'products:home'
 
-RAZORPAY_KEY_ID = "rzp_test_SkSPLXLjyyQhSb"
-RAZORPAY_KEY_SECRET = "jlUxMBI0jGsjSA49EitAxLLs"
+RAZORPAY_KEY_ID = "#"
+RAZORPAY_KEY_SECRET = "#"
